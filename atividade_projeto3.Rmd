@@ -1,0 +1,296 @@
+---
+title: "Projeto Integrador Ciência de dados - IMIH"
+subtitle: "Gerson Vasconcelos Neto - Exercício 03"
+date: "Março de 2018"
+output: html_notebook
+---
+
+# Introdução
+
+Vamos estudar com uma amostra do banco de dados do Enade. O Enade, Exame Nacional de Desempenho dos Estudantes, é um dos procedimentos de avaliação do Sistema Nacional de Avaliação da Educação Superior (Sinaes). O teste avalia o rendimento dos alunos dos cursos de graduação, ingressantes e concluintes, em relação aos conteúdos programáticos dos cursos em que estão matriculados. O exame é obrigatório para os alunos selecionados e condição indispensável para a emissão do histórico escolar. Seus resultados poderão produzir dados por instituição de educação superior, categoria administrativa, organização acadêmica, município, estado, região geográfica e Brasil. Assim, serão construídos referenciais que permitam a definição de ações voltadas à melhoria da qualidade dos cursos de graduação por parte de professores, técnicos, dirigentes e autoridades educacionais.
+
+# Exercício com uma amostra do ENADE
+
+```{r include = FALSE}
+library("readr")
+enade14 <- read_csv2("https://raw.githubusercontent.com/neylsoncrepalde/introducao_ao_r/master/dados/enade_2014_amostra.csv")  # Lendo o arquivo csv
+
+```
+
+
+**1. Mostre com um comando e usando um gráfico a distribuição das idades dessa amostra de alunos que fizeram ENADE em 2014. Comente o resultado.**
+
+```{r}
+
+hist(enade14$nu_idade, 
+     col = "lightblue", 
+     main = "Distribuição de idades - ENADE 2014",
+     xlab = "Idades (em anos)",
+     ylab = "Frequência")
+
+```
+
+O resultado gráfico nos mostra que há uma grande concentração dos alunos com uma idade entre 20 e 30 anos realizando a prova do Enade em 2014.
+
+**2.Monte uma tabela exibindo as porcentagens e os valores absolutos das proporções de alunos por COR/RAÇA. O descobrimos sobre isso?**
+
+
+Teremos 3 jeitos de fazer, sendo o primeiro manual, usando um `data.frame`:
+
+```{r}
+
+freq_ni <- table(enade14$qe_i2)  # frequências absolutas das respostas do questionário
+freq_rel_fi <- prop.table(freq_ni) # tabela de frequências relativas
+porcentagem_fi <- 100 * prop.table(freq_ni) # Porcentagem de frequência relativas
+
+# Adicionando vetores de soma total
+freq_ni <- c(freq_ni, sum(freq_ni)) 
+freq_rel_fi <- c(freq_rel_fi, sum(freq_rel_fi))
+porcentagem_fi <- c(porcentagem_fi, sum(porcentagem_fi))
+##
+
+tab_1 <- cbind(freq_ni, freq_rel_fi = round(freq_rel_fi, digits = 2),
+               porcentagem_fi = round(porcentagem_fi, digits = 2))  # criando a tabela
+
+# Ajeitando o formato da tabela para data frame e renomeando os labels
+tab_1 <- as.data.frame(tab_1)
+names(tab_1) <- c("Frequência absoluta", "Frequência relativa",
+                     "Percentual (%)")
+
+rownames(tab_1) <- c("Branco(a)", "Negro(a)", "Pardo(a)/mulato(a)",
+                     "Amarelo(a) (de origem oriental)", "Indígena ou de origem indígena",
+                     "Total")
+tab_1
+```
+
+
+o segundo com o pacote `knitr`:
+
+```{r}
+# um segundo jeito de ajeitar a tabela
+
+library(knitr)
+
+rownames(tab_1) <- c("Branco(a)", "Negro(a)", "Pardo(a)/mulato(a)",
+                     "Amarelo(a) (de origem oriental)", "Indígena ou de origem indígena",
+                     "Total")  # Nomeando as variáveis
+
+kable(tab_1, caption = "Distribuição de Cor/Raça Enade 2014", 
+      col.names = c("Frequência absoluta", "Frequência relativa",
+                     "Percentual (%)"))
+
+
+```
+
+e o terceiro com o pacote `descr`:
+
+```{r}
+
+library("descr")
+raca <- as.factor(enade14$qe_i2)
+levels(raca) <- c("Branco(a)", "Negro(a)", "Pardo(a)/mulato(a)",
+                     "Amarelo(a) (de origem oriental)", "Indígena ou de origem indígena")
+
+                     # dando nome às variáveis
+
+freq(raca, plot = F)
+
+
+
+```
+
+A conclusão que chegamos ao ver essa tabela é que os alunos de cor branca são a maioria na prova do Enade 2014, e por consequência também nas universidades, maior que até mesmo nos negros e pardos juntos. 
+
+**3. Apresente a proporção de alunos casados e solteiros. Atenção, queremos apenas CASADOS e SOLTEIROS. Exclua de sua análise os alunos que tiverem outro tipo de estado civil.**
+
+```{r}
+library(descr)
+est_civ <- as.factor(enade14$qe_i1)
+levels(est_civ) <- c("Solteiro(a)", "Casado(a)", "c", "d", "e") # transformando os nomes
+est_civ1 <- as.character(est_civ) # volto para character pois se rodasse o freq como factor
+                                  # iria dar errado
+
+freq(est_civ1[est_civ1 == "Solteiro(a)" | est_civ1 == "Casado(a)"], col = "purple",
+     main = "Frequência de casados e solteiros - Enade 2014")  #subsetting os "solteiros" e "casados"
+
+
+
+```
+
+
+**4. Apresente estatísticas descritivas sobre a nota geral dos alunos no Enade. Apresente também a informação em um gráfico. Qual é o gráfico mais adequado para a visualização desta variável? Por quê? Comente sobre a nota geral. Os alunos parecem ter, no geral, um bom desempenho ou um mal desempenho?**
+
+O gráfico mais adequado para a utilização nesse caso será um boxplot, pois nos dá uma noção gráfica da distribuição, dispersão e assimetria através da visualização dos quartis. 
+Abaixo segue algumas estatísticas descritivas:
+
+```{r}
+summary(enade14$nt_ger)
+```
+
+e o gráfico previamente referido:
+
+```{r}
+boxplot(enade14$nt_ger, col = "blue",
+        main = "Boxplot da nota geral - Enade 2014", 
+        ylab = "Notas")
+
+```
+
+Através da análise do gráfico e das estatísticas descritivas podemos afirmar que no geral os alunos do Enade 2014 tiveram um desempenho médio muito insatisfatório visto que a média geral da nota dos alunos não chega nem a 50% de acerto do total da prova.
+
+**5. Crie uma variável binária chamada PUBLICA. Nessa variável, você deve marcar 1 se a universidade em que o aluno estudou foi pública e 0 se foi privada. ATENÇÃO: existe uma variável com a categoria administrativa da IES mas ela possui várias subclassificações. É preciso que você crie outra variável com as categorias corretas.**
+
+
+
+```{r}
+PUBLICA1 <- as.factor(enade14$co_catad)
+levels(PUBLICA1) <- c(1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0)
+
+pb <- table(PUBLICA1)
+prop.table(pb)*100
+
+```
+
+
+
+outro jeito para fazer:
+
+```{r}
+
+PUBLICA2 <- ifelse(enade14$co_catad == 93 |
+                     enade14$co_catad == 116 |
+                     enade14$co_catad == 10001 |
+                     enade14$co_catad == 10002 |
+                     enade14$co_catad == 10003, 1, 0)
+
+
+```
+
+
+
+
+**6. Mostre a distribuição da renda para os alunos do ENADE 2014. Mostre também a distribuição de renda apenas para os alunos das escolas públicas e das escolas privadas.**
+
+Distribuição de renda de todos os alunos:
+```{r}
+renda <- as.factor(enade14$qe_i8)
+levels(renda) <- c(" -| 1,5", "1,5 -| 3", "3 -| 4,5", "4,5 -| 6", "6 -| 10", "10 -| 30", "30 +")
+
+
+barplot(table(renda), col ="lightgreen",
+        main = "Renda dos alunos - Enade 2014",
+        xlab = "Renda dos alunos (em salários mínimos)",
+        ylab = "Frequência")   # plotando gráfico de frequência de variáveis categóricas
+
+```
+
+Distribuição de renda para alunos de escolas públicas:
+
+```{r}
+e_pub <- ifelse(enade14$qe_i17 == "a" | enade14$qe_i17 == "d", 1 , 0)
+# considerei escola pública como os alunos que cursaram todo ou a maior parte na escola pública
+
+
+# freq(enade14$qe_i8[e_pub == 1], 
+#     col = "black",
+#     main = " Distribuição de renda para aluno de escolas públicas - Enade 2014")
+# também poderia ser feito desta maneira mas não ficaria com os labels certinho
+
+barplot(table(renda[e_pub == 1]), col ="lightgreen",
+        main = "Renda dos alunos de escolas públicas - Enade 2014",
+        xlab = "Renda dos alunos (em salários mínimos)",
+        ylab = "Frequência")
+
+
+```
+
+
+Distribuição de renda para alunos de escolas privadas:
+
+```{r}
+
+
+e_priv <- ifelse(enade14$qe_i17 == "b" | enade14$qe_i17 == "e", 1, 0)
+# considerei alunos de escolas privadas como quem cursou toda ou a maior parte em escolas privadas
+
+#barplot(table(renda[e_priv == 1]), col ="lightgreen",
+#        main = "Renda dos alunos de escolas privadas - Enade 2014",
+#        xlab = "Renda dos alunos (em salários mínimos)",
+#        ylab = "Frequência")
+
+# ou usando o ggplot2
+## ps.: Neylson, não consegui tirar os NAs, tentei diversas formas e dava erro! ajuda ae!
+## Error: Aesthetics must be either length 1 or the same as the data (2130): x
+## esse é o que tava dando sempre
+library(tidyverse)
+dd <- as.data.frame(renda[e_priv == 1]) ## transformando em data frame porque é o formato do ggplot2
+# dd2 <- na.omit(dd)
+ggplot(data = dd, aes(x =renda[e_priv == 1]))+
+  geom_bar(fill="#FF9999", colour="black")+
+  labs(title = "Renda dos alunos de escolas privadas - Enade 2014",
+       x = "Renda dos alunos (em salários mínimos)", 
+       y= "Frequência")
+
+```
+
+
+
+**7. Mostre agora a nota geral dos alunos das faculdades públicas e dos alunos das faculdades privadas. O que você acha desses dados?**
+
+Média da nota geral dos alunos de faculdades públicas:
+
+```{r}
+nt_pub <- enade14$nt_ger[PUBLICA2 == 1]
+mean(nt_pub, na.rm = T)
+
+```
+
+Média da nota geral dos alunos de faculdades privadas:
+```{r}
+nt_priv <- enade14$nt_ger[PUBLICA1 == 0]
+mean(nt_priv, na.rm = T)
+```
+
+Os dados retratam a realidade das nossas instituições de ensino superior, com as instituições públicas, que são geralmente mais conceituadas, com uma média maior que as privadas.
+
+
+
+**BÔNUS 1: Existe um teste estatístico para verificar se a média da nota geral desta amostra dos alunos que fizeram ENADE pode ser inferida para toda a população? Faça o teste e apresente os resultados. Qual é o intervalo de confiança do teste?**
+
+Primeiro vamos ver qual a distribuição da amostra:
+
+```{r}
+hist(enade14$nt_ger, col = "blue",
+        main = "Boxplot da nota geral - Enade 2014", 
+        xlab = "Notas",
+        ylab = "Frequência")
+
+
+```
+
+podemos ver que se aproxima de uma distribuição normal. Como não temos a variância da população, iremos aplicar um teste t para a amostra.
+
+```{r}
+t.test(enade14$nt_ger)
+
+```
+
+Com um intervalo de confiança de 95% podemos afirmar que a média da nota geral dessa amostra pode ser inferida para a população pois o p-value é menor que o nível de significância 0,05.
+
+
+
+**BÔNUS 2: Existe um teste estatístico para verificar se a diferença entre as notas dos alunos das universidades públicas e dos alunos das universidades privadas é estatisticamente significante? Faça o teste e apresente os resultados.**
+
+```{r}
+## não consegui fazer pois ele diz que os comprimentos das variáveis são diferentes. 
+## Mas a quantidade de pessoas que fizeram em instituções públicas e privadas diferem.
+## O que fazer ? dá aquela luz aee mestre Neylson!!
+
+t.test(nt_pub ~ nt_priv)
+
+```
+
+
+
+
+
