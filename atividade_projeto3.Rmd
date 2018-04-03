@@ -295,7 +295,9 @@ Com um intervalo de confiança de 95% podemos afirmar que a média da nota geral
 ## Mas a quantidade de pessoas que fizeram em instituções públicas e privadas diferem.
 ## O que fazer ? dá aquela luz aee mestre Neylson!!
 
-t.test(nt_pub ~ nt_priv)
+# Como vc não está extraindo variáveis de um banco de dados mas criou dois objetos independentes,
+# precisamos separar com vírgula:
+t.test(nt_pub, nt_priv)
 
 ```
 
