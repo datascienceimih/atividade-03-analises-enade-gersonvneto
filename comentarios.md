@@ -7,3 +7,6 @@
   Bravo!!
   
   Prof. Neylson
+  
+  ps.: Depois de abrir seu código .Rmd, clique em *History* para ver os dois commits que dei dando as soluções dos NAs
+  e do t.test
