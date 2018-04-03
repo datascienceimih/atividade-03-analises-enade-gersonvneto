@@ -225,12 +225,21 @@ e_priv <- ifelse(enade14$qe_i17 == "b" | enade14$qe_i17 == "e", 1, 0)
 library(tidyverse)
 dd <- as.data.frame(renda[e_priv == 1]) ## transformando em data frame porque é o formato do ggplot2
 # dd2 <- na.omit(dd)
-ggplot(data = dd, aes(x =renda[e_priv == 1]))+
-  geom_bar(fill="#FF9999", colour="black")+
+
+# O problema todo está no nome como as variáveis aparecem. Veja:
+names(dd)
+
+# Para selecionar, precisaríamos colocar esse nome esquisito entre crases
+head(dd$`renda[e_priv == 1]`)
+
+# Renomeando a variável, o comando na.omit funciona
+names(dd) = "renda_subset"
+
+ggplot(data = na.omit(dd), aes(x = renda_subset))+
+  geom_bar(fill="#FF9999", colour="black", na.rm = T)+
   labs(title = "Renda dos alunos de escolas privadas - Enade 2014",
        x = "Renda dos alunos (em salários mínimos)", 
        y= "Frequência")
-
 ```
 
 
